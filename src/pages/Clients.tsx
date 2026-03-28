@@ -2,17 +2,20 @@ import AppLayout from "@/components/AppLayout";
 import { useClients, useCreateClient, useDeleteClient, useUpdateClient } from "@/hooks/useCrmData";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import CrudDialog from "@/components/CrudDialog";
 
 const clientFields = [
   { name: "name", label: "Full Name", type: "text" as const, placeholder: "John Doe", required: true },
   { name: "email", label: "Email", type: "email" as const, placeholder: "john@company.com" },
+  { name: "phone", label: "Phone", type: "text" as const, placeholder: "+1 555-0123" },
   { name: "company", label: "Company", type: "text" as const, placeholder: "Acme Inc" },
   { name: "status", label: "Status", type: "select" as const, options: [
     { value: "lead", label: "Lead" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
   ]},
+  { name: "lead_source", label: "Lead Source", type: "text" as const, placeholder: "Referral, Google, etc." },
 ];
 
 export default function Clients() {
@@ -44,7 +47,7 @@ export default function Clients() {
           {clients.map((client) => (
             <div key={client.id} className="rounded-xl border border-border bg-card p-5 transition-all duration-300 hover:border-primary/30 card-glow">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
+                <Link to={`/clients/${client.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
                     {client.name.split(" ").map(n => n[0]).join("")}
                   </div>
@@ -52,7 +55,7 @@ export default function Clients() {
                     <p className="font-display font-semibold text-foreground">{client.name}</p>
                     <p className="text-xs text-muted-foreground">{client.company || "—"}</p>
                   </div>
-                </div>
+                </Link>
                 <div className="flex items-center gap-2">
                   <Badge variant={client.status === "active" ? "default" : client.status === "lead" ? "secondary" : "outline"} className="text-[10px]">
                     {client.status}
@@ -64,8 +67,10 @@ export default function Clients() {
                     initialData={{
                       name: client.name,
                       email: client.email || "",
+                      phone: (client as any).phone || "",
                       company: client.company || "",
                       status: client.status,
+                      lead_source: (client as any).lead_source || "",
                     }}
                     onSubmit={async (data) => {
                       await updateClient.mutateAsync({ id: client.id, ...data } as any);
