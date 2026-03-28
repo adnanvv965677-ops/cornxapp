@@ -1,6 +1,6 @@
-import { useState, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Pencil, Loader2 } from "lucide-react";
 
 interface FormField {
   name: string;
@@ -16,12 +16,22 @@ interface CrudDialogProps {
   fields: FormField[];
   onSubmit: (data: Record<string, string>) => Promise<void>;
   trigger?: ReactNode;
+  initialData?: Record<string, string>;
+  mode?: "create" | "edit";
 }
 
-export default function CrudDialog({ title, fields, onSubmit, trigger }: CrudDialogProps) {
+export default function CrudDialog({ title, fields, onSubmit, trigger, initialData, mode = "create" }: CrudDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (open && initialData) {
+      setFormData(initialData);
+    } else if (open && !initialData) {
+      setFormData({});
+    }
+  }, [open, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,19 +46,25 @@ export default function CrudDialog({ title, fields, onSubmit, trigger }: CrudDia
     setLoading(false);
   };
 
+  const defaultTrigger = mode === "edit" ? (
+    <button className="text-muted-foreground hover:text-primary transition-colors">
+      <Pencil className="h-3.5 w-3.5" />
+    </button>
+  ) : (
+    <button className="flex items-center gap-2 rounded-lg gold-gradient px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90">
+      <Plus className="h-4 w-4" />
+      {title}
+    </button>
+  );
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
-          <button className="flex items-center gap-2 rounded-lg gold-gradient px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90">
-            <Plus className="h-4 w-4" />
-            {title}
-          </button>
-        )}
+        {trigger || defaultTrigger}
       </DialogTrigger>
       <DialogContent className="border-border bg-card sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display text-foreground">{title}</DialogTitle>
+          <DialogTitle className="font-display text-foreground">{mode === "edit" ? `Edit ${title}` : title}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {fields.map((field) => (
@@ -84,7 +100,7 @@ export default function CrudDialog({ title, fields, onSubmit, trigger }: CrudDia
             className="flex w-full items-center justify-center gap-2 rounded-lg gold-gradient py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Save
+            {mode === "edit" ? "Update" : "Save"}
           </button>
         </form>
       </DialogContent>

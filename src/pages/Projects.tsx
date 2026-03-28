@@ -1,5 +1,5 @@
 import AppLayout from "@/components/AppLayout";
-import { useProjects, useCreateProject, useDeleteProject, useClients } from "@/hooks/useCrmData";
+import { useProjects, useCreateProject, useDeleteProject, useUpdateProject, useClients } from "@/hooks/useCrmData";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, DollarSign, Trash2 } from "lucide-react";
 import CrudDialog from "@/components/CrudDialog";
@@ -9,6 +9,7 @@ export default function Projects() {
   const { data: clients = [] } = useClients();
   const createProject = useCreateProject();
   const deleteProject = useDeleteProject();
+  const updateProject = useUpdateProject();
 
   const columns = [
     { key: "planning" as const, label: "Planning", color: "bg-muted-foreground" },
@@ -62,9 +63,30 @@ export default function Projects() {
                           <p className="font-display font-semibold text-foreground">{project.name}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">{(project as any).clients?.name || "No client"}</p>
                         </div>
-                        <button onClick={() => deleteProject.mutate(project.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <CrudDialog
+                            title="Project"
+                            fields={projectFields}
+                            mode="edit"
+                            initialData={{
+                              name: project.name,
+                              client_id: project.client_id || "",
+                              status: project.status,
+                              budget: String(project.budget),
+                              deadline: project.deadline || "",
+                            }}
+                            onSubmit={async (data) => {
+                              await updateProject.mutateAsync({
+                                id: project.id,
+                                ...data,
+                                budget: data.budget ? Number(data.budget) : 0,
+                              } as any);
+                            }}
+                          />
+                          <button onClick={() => deleteProject.mutate(project.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                       <div className="mt-3 flex items-center gap-2">
                         <Progress value={project.progress} className="h-1.5 flex-1" />
