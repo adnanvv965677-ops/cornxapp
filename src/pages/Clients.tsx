@@ -1,5 +1,5 @@
 import AppLayout from "@/components/AppLayout";
-import { useClients, useCreateClient, useDeleteClient } from "@/hooks/useCrmData";
+import { useClients, useCreateClient, useDeleteClient, useUpdateClient } from "@/hooks/useCrmData";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Trash2 } from "lucide-react";
 import CrudDialog from "@/components/CrudDialog";
@@ -19,6 +19,7 @@ export default function Clients() {
   const { data: clients = [], isLoading } = useClients();
   const createClient = useCreateClient();
   const deleteClient = useDeleteClient();
+  const updateClient = useUpdateClient();
 
   return (
     <AppLayout title="Clients" subtitle="Manage your client relationships">
@@ -56,6 +57,20 @@ export default function Clients() {
                   <Badge variant={client.status === "active" ? "default" : client.status === "lead" ? "secondary" : "outline"} className="text-[10px]">
                     {client.status}
                   </Badge>
+                  <CrudDialog
+                    title="Client"
+                    fields={clientFields}
+                    mode="edit"
+                    initialData={{
+                      name: client.name,
+                      email: client.email || "",
+                      company: client.company || "",
+                      status: client.status,
+                    }}
+                    onSubmit={async (data) => {
+                      await updateClient.mutateAsync({ id: client.id, ...data } as any);
+                    }}
+                  />
                   <button onClick={() => deleteClient.mutate(client.id)} className="text-muted-foreground hover:text-destructive transition-colors">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

@@ -30,6 +30,11 @@ export default function Tasks() {
       { value: "medium", label: "Medium" },
       { value: "low", label: "Low" },
     ]},
+    { name: "status", label: "Status", type: "select" as const, options: [
+      { value: "todo", label: "To Do" },
+      { value: "in-progress", label: "In Progress" },
+      { value: "done", label: "Done" },
+    ]},
     { name: "due_date", label: "Due Date", type: "date" as const },
   ];
 
@@ -68,6 +73,21 @@ export default function Tasks() {
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${priorityStyles[task.priority] || ""}`}>
                             {task.priority}
                           </span>
+                          <CrudDialog
+                            title="Task"
+                            fields={taskFields}
+                            mode="edit"
+                            initialData={{
+                              title: task.title,
+                              project_id: task.project_id || "",
+                              priority: task.priority,
+                              status: task.status,
+                              due_date: task.due_date || "",
+                            }}
+                            onSubmit={async (data) => {
+                              await updateTask.mutateAsync({ id: task.id, ...data } as any);
+                            }}
+                          />
                           <button onClick={() => deleteTask.mutate(task.id)} className="text-muted-foreground hover:text-destructive transition-colors">
                             <Trash2 className="h-3 w-3" />
                           </button>

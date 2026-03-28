@@ -1,5 +1,5 @@
 import AppLayout from "@/components/AppLayout";
-import { useInvoices, useCreateInvoice, useDeleteInvoice, useClients } from "@/hooks/useCrmData";
+import { useInvoices, useCreateInvoice, useDeleteInvoice, useUpdateInvoice, useClients } from "@/hooks/useCrmData";
 import StatCard from "@/components/StatCard";
 import { DollarSign, Clock, AlertTriangle, Trash2 } from "lucide-react";
 import CrudDialog from "@/components/CrudDialog";
@@ -9,6 +9,7 @@ export default function Invoices() {
   const { data: clients = [] } = useClients();
   const createInvoice = useCreateInvoice();
   const deleteInvoice = useDeleteInvoice();
+  const updateInvoice = useUpdateInvoice();
 
   const paid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + Number(i.amount), 0);
   const pending = invoices.filter(i => i.status === "pending").reduce((s, i) => s + Number(i.amount), 0);
@@ -73,7 +74,7 @@ export default function Invoices() {
                   <th className="px-6 py-4 font-medium text-muted-foreground">Amount</th>
                   <th className="px-6 py-4 font-medium text-muted-foreground">Status</th>
                   <th className="px-6 py-4 font-medium text-muted-foreground">Due Date</th>
-                  <th className="px-6 py-4 font-medium text-muted-foreground"></th>
+                  <th className="px-6 py-4 font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -89,9 +90,30 @@ export default function Invoices() {
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{inv.due_date ? new Date(inv.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}</td>
                     <td className="px-6 py-4">
-                      <button onClick={() => deleteInvoice.mutate(inv.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <CrudDialog
+                          title="Invoice"
+                          fields={invoiceFields}
+                          mode="edit"
+                          initialData={{
+                            invoice_number: inv.invoice_number,
+                            client_id: inv.client_id || "",
+                            amount: String(inv.amount),
+                            status: inv.status,
+                            due_date: inv.due_date || "",
+                          }}
+                          onSubmit={async (data) => {
+                            await updateInvoice.mutateAsync({
+                              id: inv.id,
+                              ...data,
+                              amount: data.amount ? Number(data.amount) : 0,
+                            } as any);
+                          }}
+                        />
+                        <button onClick={() => deleteInvoice.mutate(inv.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
